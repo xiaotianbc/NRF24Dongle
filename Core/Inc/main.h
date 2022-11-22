@@ -42,7 +42,7 @@ extern "C" {
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "printf.h"
 /* USER CODE END Includes */
 
 /* Exported types ------------------------------------------------------------*/
@@ -66,6 +66,7 @@ void Error_Handler(void);
 /* USER CODE BEGIN EFP */
 extern void daplink_init(void);
 extern void winusb_str_test1(void);
+extern void winusb_send_buffer(uint8_t* buf, uint32_t len);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/

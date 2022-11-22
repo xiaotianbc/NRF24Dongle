@@ -1,7 +1,5 @@
 #include "usbd_core.h"
 #include "usbd_cdc.h"
-//#include "DAP_config.h"
-//#include "DAP.h"
 
 #define DAP_IN_EP  0x81
 #define DAP_OUT_EP 0x02
@@ -11,18 +9,15 @@
 #define CDC_INT_EP 0x85
 
 #define USBD_VID           0xc251
-#define USBD_PID           0x1943
+#define USBD_PID           0x1901
 #define USBD_MAX_POWER     500
 #define USBD_LANGID_STRING 1033
 
 #define CMSIS_DAP_INTERFACE_SIZE (9 + 7 + 7)
 #define USB_CONFIG_SIZE          (9 + CMSIS_DAP_INTERFACE_SIZE + CDC_ACM_DESCRIPTOR_LEN)
 
-#ifdef CONFIG_USB_HS
-#define CDC_MAX_MPS 512
-#else
+
 #define CDC_MAX_MPS 64
-#endif
 
 #define WCID_VENDOR_CODE 0x01
 
@@ -86,17 +81,17 @@ __ALIGN_BEGIN const uint8_t WINUSB_IF0_WCIDProperties[142] __ALIGN_END =
                 'a', 0x00, 'c', 0x00, 'e', 0x00, 'G', 0x00,  /* wcName_20 */
                 'U', 0x00, 'I', 0x00, 'D', 0x00, 0x00, 0x00, /* wcName_20 */
                 0x4e, 0x00, 0x00, 0x00,                      /* dwPropertyDataLength */
-                /* {CDB3B5AD-293B-4663-AA36-1AAE46463776} */
-                '{', 0x00, 'C', 0x00, 'D', 0x00, 'B', 0x00, /* wcData_39 */
-                '3', 0x00, 'B', 0x00, '5', 0x00, 'A', 0x00, /* wcData_39 */
-                'D', 0x00, '-', 0x00, '2', 0x00, '9', 0x00, /* wcData_39 */
-                '3', 0x00, 'B', 0x00, '-', 0x00, '4', 0x00, /* wcData_39 */
-                '6', 0x00, '6', 0x00, '3', 0x00, '-', 0x00, /* wcData_39 */
-                'A', 0x00, 'A', 0x00, '3', 0x00, '6', 0x00, /* wcData_39 */
-                '-', 0x00, '1', 0x00, 'A', 0x00, 'A', 0x00, /* wcData_39 */
-                'E', 0x00, '4', 0x00, '6', 0x00, '4', 0x00, /* wcData_39 */
-                '6', 0x00, '3', 0x00, '7', 0x00, '7', 0x00, /* wcData_39 */
-                '6', 0x00, '}', 0x00, 0x00, 0x00,           /* wcData_39 */
+                /* {CB7F2F92-1827-7E42-09A8-E80A647F6EED} */
+                '{', 0x00, 'C', 0x00, 'B', 0x00, '7', 0x00, /* wcData_39 */
+                'F', 0x00, '2', 0x00, 'F', 0x00, '9', 0x00, /* wcData_39 */
+                '2', 0x00, '-', 0x00, '1', 0x00, '8', 0x00, /* wcData_39 */
+                '2', 0x00, '7', 0x00, '-', 0x00, '7', 0x00, /* wcData_39 */
+                'E', 0x00, '4', 0x00, '2', 0x00, '-', 0x00, /* wcData_39 */
+                '0', 0x00, '9', 0x00, 'A', 0x00, '8', 0x00, /* wcData_39 */
+                '-', 0x00, 'E', 0x00, '8', 0x00, '0', 0x00, /* wcData_39 */
+                'A', 0x00, '6', 0x00, '4', 0x00, '7', 0x00, /* wcData_39 */
+                'F', 0x00, '6', 0x00, 'E', 0x00, 'E', 0x00, /* wcData_39 */
+                'D', 0x00, '}', 0x00, 0x00, 0x00,           /* wcData_39 */
         };
 
 struct usb_msosv1_descriptor msosv1_desc =
@@ -174,19 +169,6 @@ const uint8_t daplink_descriptor[] =
                 'D', 0,                     // wcChar9
                 'E', 0,                     // wcChar10
                 'F', 0,                     // wcChar11
-#ifdef CONFIG_USB_HS
-                /* Device Qualifier */
-                0x0a,
-                USB_DESCRIPTOR_TYPE_DEVICE_QUALIFIER,
-                0x10,
-                0x02,
-                0x00,
-                0x00,
-                0x00,
-                0x40,
-                0x01,
-                0x00,
-#endif
                 /* End */
                 0x00
         };
@@ -301,13 +283,20 @@ void daplink_init(void) {
     usbd_initialize();
 }
 
-unsigned char winusb_str_test[4096];
-
+uint8_t tx_buffer[2048];
 extern void HAL_Delay(uint32_t Delay);
 
 void winusb_str_test1(void) {
         ep_tx_busy_flag = true;
-        if (usbd_ep_start_write(DAP_IN_EP, winusb_str_test, 4096) == 0) {
+    int len=sprintf(tx_buffer,"Hello,CherryUSB-winusb\n");
+        if (usbd_ep_start_write(DAP_IN_EP, tx_buffer, len) == 0) {
             while (ep_tx_busy_flag);
         }
+}
+
+void winusb_send_buffer(uint8_t* buf, uint32_t len){
+    while (ep_tx_busy_flag);
+    if (usbd_ep_start_write(DAP_IN_EP, buf, len) == 0) {
+        ep_tx_busy_flag = true;
+    }
 }

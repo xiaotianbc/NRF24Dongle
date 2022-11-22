@@ -26,6 +26,8 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 
+#include "printf.h"
+#include "drv_RF24L01.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -105,20 +107,30 @@ void MX_FREERTOS_Init(void) {
 }
 
 /* USER CODE BEGIN Header_StartDefaultTask */
-/**
-  * @brief  Function implementing the defaultTask thread.
-  * @param  argument: Not used
-  * @retval None
-  */
+
+
+const char *g_Ashining = "ashining";
+uint8_t g_TxMode = 0, g_UartRxFlag = 0;
+uint8_t g_UartRxBuffer[ 100 ] = { 0 };
+uint8_t g_RF24L01RxBuffer[ 32 ] = { 0 };
+
+
+uint8_t read_buf[5];
+
 /* USER CODE END Header_StartDefaultTask */
 void StartDefaultTask(void *argument)
 {
   /* USER CODE BEGIN StartDefaultTask */
-  /* Infinite loop */
-  for(;;)
-  {
-      winusb_str_test1();
-    osDelay(1);
+    //RF24L01ÂºïËÑöÂàùÂßãÂå?
+    NRF24L01_Gpio_Init( );
+
+    //Ê£?ÊµãnRF24L01
+    NRF24L01_check( );
+    RF24L01_Init( );
+    RF24L01_Set_Mode( MODE_TX );		//ÂèëÈ?ÅÊ®°Âº?
+    for(;;)
+  {NRF24L01_TxPacket( (uint8_t *)g_Ashining, 8 );		//Ê®°Âºè1ÂèëÈ?ÅÂõ∫ÂÆöÂ≠óÁ¨?,1S‰∏?Âå?
+    osDelay(1000);
   }
   /* USER CODE END StartDefaultTask */
 }
